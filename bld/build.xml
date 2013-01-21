@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+*********************************************************************************************
+	Buildfile for SWC files
+*********************************************************************************************
+-->
+<project name="decadence" default="Init" basedir="..">
+	
+	<!-- application information -->
+	<property name="app.name"			value="decadence"/>
+	<property name="app.pubname"		value="decadence"/>
+	<property name="app.version"		value="0.1.0"/>
+	<property name="app.releasestage"	value="beta"/>
+	<property name="app.copyright"		value="Copyright(c) Hexagon Star Softworks"/>
+	
+	<!-- swc properties -->
+	<property name="swc.targetname"		value="decadence.swc"/>
+	
+	<!-- version of the used flex sdk -->
+	<property name="sdk.version"		value="4.1.0"/>
+	
+	<!-- version of the targetted flash player -->
+	<property name="fpv.version"		value="10.1.0"/>
+	
+	<!-- default project folders -->
+	<property name="path.src"			value="${basedir}/src/lib"/>
+	<property name="path.bin"			value="${basedir}/bin"/>
+	<property name="path.pub"			value="${basedir}/pub"/>
+	
+	<!-- workspace & sdk pathes -->
+	<property name="workspace"			value="${eclipse.workspace}"/>
+	<property name="flex.sdk.basepath"	value="C:/Users/sascha/Applications/FlexSDK"/>
+	<property name="sdk"				value="${flex.sdk.basepath}/${sdk.version}"/>
+	<property name="FLEX_HOME"			value="${sdk}"/>
+	<property name="path.asdoc"			value="${sdk}/bin/asdoc.exe"/>
+	<property name="path.cfg.flex"		value="${sdk}/frameworks/flex-config.xml"/>
+	<property name="path.cfg.air"		value="${sdk}/frameworks/air-config.xml"/>
+	<property name="path.buildnumber"	value="bld/build.number"/>
+	
+	<!-- flextasks definitions -->
+	<taskdef resource="flexTasks.tasks" classpath="${sdk}/ant/lib/flexTasks.jar"/>
+	
+	
+	<!-- ==================================================================================== -->
+	<!-- TARGETS                                                                              -->
+	<!-- ==================================================================================== -->
+	
+	<target name="Init" description="">
+		<echoproperties/>
+	</target>
+	
+	<target name="Clean" description="Cleans the output folder.">
+		<clean/>
+		<refresh/>
+	</target>
+	
+	
+	<target name="Build" description="Builds a distribution version.">
+		<prepareBuild/>
+		<buildSWC/>
+		<refresh/>
+	</target>
+	
+	
+	<target name="Pack" description="Creates a zipped version for distribution.">
+		<cleanPub/>
+		<packDistribution/>
+		<refresh/>
+	</target>
+	
+	
+	<!-- ==================================================================================== -->
+	<!-- MACRODEFS                                                                            -->
+	<!-- ==================================================================================== -->
+	
+	<macrodef name="prepareBuild">
+		<sequential>
+			<buildnumber file="${path.buildnumber}"/>
+			<tstamp>
+				<format property="build.date" pattern="dd-MMMM-yyyy HH:mm" unit="minute" locale="en"/>
+			</tstamp>
+			<echo message="*** ${ant.project.name} version: ${app.version} build #${build.number}, ${build.date} ***" level="info"/>
+			<generateAppInfo buildnr="${build.number}" builddate="${build.date}" releasestage="${app.releasestage}"/>
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="generateAppInfo">
+		<attribute name="buildnr" default=""/>
+		<attribute name="builddate" default=""/>
+		<attribute name="releasestage" default=""/>
+		<sequential>
+			<echo message="Generating Decadence.as ..." level="info"/>
+			<echo file="${path.src}/com/hexagonstar/decadence/Decadence.as" append="false"><![CDATA[/*
+ *   __| ___  __  __   __| ___  __  __  ___  
+ *  (__|(__/_(___(__(_(__|(__/_|  )(___(__/__
+ *  tile scrolling engine
+ *
+ * Licensed under the MIT License
+ * Copyright (c) 2011 Hexagon Star Softworks
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+package com.hexagonstar.decadence
+{
+	/**
+	 * Contains constants that describe version information about the library.
+	 */
+	public class Decadence
+	{
+		//-----------------------------------------------------------------------------------------
+		// Constants
+		//-----------------------------------------------------------------------------------------
+		
+		public static const NAME:String				= "${app.name}";
+		public static const VERSION:String			= "${app.version}";
+		public static const BUILD:String			= "@{buildnr}";
+		public static const RELEASE_STAGE:String	= "@{releasestage}";
+		public static const DATE:String				= "@{builddate}";
+		public static const COPYRIGHT:String		= "${app.copyright}";
+	}
+}]]>
+</echo>
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="buildSWC">
+		<sequential>
+			<echo message="Creating Decadence SWC ..." level="info"/>
+			<compc
+				output="${path.bin}/swc/${swc.targetname}"
+				target-player="${fpv.version}"
+				debug="false"
+				optimize="true"
+				strict="true">
+				<source-path path-element="${path.src}"/>
+				<include-sources dir="${path.src}" includes="*"/>
+				
+				<compiler.library-path dir="${FLEX_HOME}/frameworks/libs/player/10.1" append="false">
+					<include name="*.swc"/>
+				</compiler.library-path>
+				<compiler.library-path dir="${FLEX_HOME}/frameworks/libs" append="false">
+					<include name="flex.swc"/>
+				</compiler.library-path>
+				<compiler.library-path dir="${FLEX_HOME}/frameworks/locale/en_US" append="false">
+					<include name="*.swc"/>
+				</compiler.library-path>
+				
+			</compc>
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="clean">
+		<sequential>
+			<!-- <delete includeemptydirs="true">
+				<fileset dir="${path.bin}" includes="**/*" excludes="**/.svn"/>
+			</delete> -->
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="cleanPub">
+		<sequential>
+			<delete includeemptydirs="true">
+				<fileset dir="${path.pub}" includes="**/*" excludes="**/.svn"/>
+			</delete>
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="packDistribution">
+		<sequential>
+			<zip destfile="${path.pub}/${app.pubname}_dist.zip"
+				basedir="${path.bin}"
+				excludes="**/.svn"
+				update="false"
+				compress="true"/>
+		</sequential>
+	</macrodef>
+	
+	
+	<macrodef name="refresh">
+		<sequential>
+		</sequential>
+	</macrodef>
+	
+</project>

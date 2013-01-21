@@ -1,6 +1,5 @@
 .settings/*
 .svn/*
-bin/*
 .idea/dictionaries/*
 .idea/uiDesigner.xml
 .idea/workspace.xml
